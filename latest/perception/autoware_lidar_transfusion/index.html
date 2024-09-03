@@ -4171,14 +4171,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/autoware_pose_instability_detector/">Autoware pose instability detector</a>
+          <a href="../../localization/autoware_pose_initializer/">Autoware pose initializer</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_8">
           <span class="md-nav__icon md-icon"></span>
-          Autoware pose instability detector
+          Autoware pose initializer
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -4219,14 +4219,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/autoware_stop_filter/">Autoware stop filter</a>
+          <a href="../../localization/autoware_pose_instability_detector/">Autoware pose instability detector</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_9_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_9">
           <span class="md-nav__icon md-icon"></span>
-          Autoware stop filter
+          Autoware pose instability detector
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -4267,14 +4267,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/autoware_twist2accel/">Autoware twist2accel</a>
+          <a href="../../localization/autoware_stop_filter/">Autoware stop filter</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_10_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_10">
           <span class="md-nav__icon md-icon"></span>
-          Autoware twist2accel
+          Autoware stop filter
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -4315,14 +4315,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/ekf_localizer/">Ekf localizer</a>
+          <a href="../../localization/autoware_twist2accel/">Autoware twist2accel</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_11_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_11">
           <span class="md-nav__icon md-icon"></span>
-          Ekf localizer
+          Autoware twist2accel
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -4363,14 +4363,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/localization_util/">Localization util</a>
+          <a href="../../localization/ekf_localizer/">Ekf localizer</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_12_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_12">
           <span class="md-nav__icon md-icon"></span>
-          Localization util
+          Ekf localizer
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -4411,14 +4411,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/ndt_scan_matcher/">Ndt scan matcher</a>
+          <a href="../../localization/localization_util/">Localization util</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_13_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_13">
           <span class="md-nav__icon md-icon"></span>
-          Ndt scan matcher
+          Localization util
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -4459,14 +4459,14 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/pose_initializer/">Pose initializer</a>
+          <a href="../../localization/ndt_scan_matcher/">Ndt scan matcher</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_14_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_14">
           <span class="md-nav__icon md-icon"></span>
-          Pose initializer
+          Ndt scan matcher
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -13151,8 +13151,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#transfusion" class="md-nav__link">
-    TransFusion
+  <a href="#transfusion-node" class="md-nav__link">
+    TransFusion node
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfusion-model" class="md-nav__link">
+    TransFusion model
   </a>
   
 </li>
@@ -13328,7 +13335,7 @@
 </tbody>
 </table>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
-<h3 id="transfusion">TransFusion<a class="headerlink" href="#transfusion" title="Permanent link">#</a></h3>
+<h3 id="transfusion-node">TransFusion node<a class="headerlink" href="#transfusion-node" title="Permanent link">#</a></h3>
 <table>
 <thead>
 <tr>
@@ -13340,13 +13347,6 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>class_names</td>
-<td>array</td>
-<td>An array of class names will be predicted.</td>
-<td>['CAR', 'TRUCK', 'BUS', 'BICYCLE', 'PEDESTRIAN']</td>
-<td>N/A</td>
-</tr>
 <tr>
 <td>trt_precision</td>
 <td>string</td>
@@ -13362,27 +13362,6 @@
 <td>≥1</td>
 </tr>
 <tr>
-<td>voxels_num</td>
-<td>array</td>
-<td>A maximum number of voxels [min, opt, max].</td>
-<td>[5000, 30000, 60000]</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>point_cloud_range</td>
-<td>array</td>
-<td>An array of distance ranges of each class.</td>
-<td>[-76.8, -76.8, -3.0, 76.8, 76.8, 5.0]</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>voxel_size</td>
-<td>array</td>
-<td>Voxels size [x, y, z].</td>
-<td>[0.3, 0.3, 8.0]</td>
-<td>N/A</td>
-</tr>
-<tr>
 <td>onnx_path</td>
 <td>string</td>
 <td>A path to ONNX model file.</td>
@@ -13395,20 +13374,6 @@
 <td>A path to TensorRT engine file.</td>
 <td>$(var model_path)/transfusion.engine</td>
 <td>N/A</td>
-</tr>
-<tr>
-<td>num_proposals</td>
-<td>integer</td>
-<td>Number of proposals at TransHead.</td>
-<td>500</td>
-<td>≥1</td>
-</tr>
-<tr>
-<td>down_sample_factor</td>
-<td>integer</td>
-<td>A scale factor of downsampling points</td>
-<td>1</td>
-<td>≥1</td>
 </tr>
 <tr>
 <td>densification_num_past_frames</td>
@@ -13465,6 +13430,55 @@
 <td>A threshold value of confidence score, all of objects with score less than this threshold are ignored.</td>
 <td>0.2</td>
 <td>≥0.0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="transfusion-model">TransFusion model<a class="headerlink" href="#transfusion-model" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+<th>Range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>class_names</td>
+<td>array</td>
+<td>An array of class names will be predicted.</td>
+<td>['CAR', 'TRUCK', 'BUS', 'BICYCLE', 'PEDESTRIAN']</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>voxels_num</td>
+<td>array</td>
+<td>A maximum number of voxels [min, opt, max].</td>
+<td>[5000, 30000, 60000]</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>point_cloud_range</td>
+<td>array</td>
+<td>An array of distance ranges of each class.</td>
+<td>[-76.8, -76.8, -3.0, 76.8, 76.8, 5.0]</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>voxel_size</td>
+<td>array</td>
+<td>Voxels size [x, y, z].</td>
+<td>[0.3, 0.3, 8.0]</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>num_proposals</td>
+<td>integer</td>
+<td>Number of proposals at TransHead.</td>
+<td>500</td>
+<td>≥1</td>
 </tr>
 </tbody>
 </table>
