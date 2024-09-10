@@ -21,7 +21,7 @@
     
     
       
-        <title>Planning Evaluator - Autoware Universe Documentation</title>
+        <title>Control Evaluator - Autoware Universe Documentation</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#planning-evaluator" class="md-skip">
+        <a href="#control-evaluator" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Planning Evaluator
+              Control Evaluator
             
           </span>
         </div>
@@ -1252,8 +1252,6 @@
         
           
         
-          
-        
       
       
         <label class="md-nav__link" for="__nav_1_4" id="__nav_1_4_label" tabindex="0">
@@ -1402,20 +1400,6 @@
     <li class="md-nav__item">
       <a href="../../common/tier4_localization_rviz_plugin" class="md-nav__link">
         tier4_localization_rviz_plugin
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../common/tier4_perception_rviz_plugin" class="md-nav__link">
-        tier4_perception_rviz_plugin
       </a>
     </li>
   
@@ -5113,6 +5097,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
@@ -7431,6 +7417,54 @@
         <label class="md-nav__title" for="__nav_7_39">
           <span class="md-nav__icon md-icon"></span>
           Autoware traffic light visualization
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_40" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../perception/perception_utils/">Perception utils</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_40">
+          <span class="md-nav__icon md-icon"></span>
+          Perception utils
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -10360,6 +10394,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
@@ -10642,12 +10678,60 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../simulator/vehicle_door_simulator/">Vehicle door simulator</a>
+          <a href="../../simulator/tier4_dummy_object_rviz_plugin/">Tier4 dummy object rviz plugin</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_6_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_10_6">
+          <span class="md-nav__icon md-icon"></span>
+          Tier4 dummy object rviz plugin
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_7" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../simulator/vehicle_door_simulator/">Vehicle door simulator</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_10_7">
           <span class="md-nav__icon md-icon"></span>
           Vehicle door simulator
         </label>
@@ -13158,6 +13242,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#evaluated-metrics" class="md-nav__link">
+    Evaluated metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kinematics-output" class="md-nav__link">
+    Kinematics output
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -13176,9 +13274,15 @@
   
 
 
-<div><h1 id="planning-evaluator">Planning Evaluator<a class="headerlink" href="#planning-evaluator" title="Permanent link">#</a></h1>
+<div><h1 id="control-evaluator">Control Evaluator<a class="headerlink" href="#control-evaluator" title="Permanent link">#</a></h1>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">#</a></h2>
-<p>This package provides nodes that generate metrics to evaluate the quality of control.</p></div>
+<p>This package provides nodes that generate metrics to evaluate the quality of control.</p>
+<p>It publishes diagnostic information about control modules' outputs as well as the ego vehicle's current kinematics and position.</p>
+<h2 id="evaluated-metrics">Evaluated metrics<a class="headerlink" href="#evaluated-metrics" title="Permanent link">#</a></h2>
+<p>The control evaluator uses the metrics defined in <code>include/autoware/control_evaluator/metrics/deviation_metrics.hpp</code>to calculate deviations in yaw and lateral distance from the ego's set-point. The control_evaluator can also be customized to offer metrics/evaluation about other control modules. Currently, the control_evaluator offers a simple diagnostic output based on the autonomous_emergency_braking node's output, but this functionality can be extended to evaluate other control modules' performance.</p>
+<h2 id="kinematics-output">Kinematics output<a class="headerlink" href="#kinematics-output" title="Permanent link">#</a></h2>
+<p>The control evaluator module also constantly publishes information regarding the ego vehicle's kinematics and position. It publishes the current ego lane id with the longitudinal <code>s</code> and lateral <code>t</code> arc coordinates. It also publishes the current ego speed, acceleration and jerk in its diagnostic messages.</p>
+<p>This information can be used by other nodes to establish automated evaluation using rosbags: by crosschecking the ego position and kinematics with the evaluated control module's output, it is possible to judge if the evaluated control modules reacted in a satisfactory way at certain interesting points of the rosbag reproduction.</p></div>
 
 
 

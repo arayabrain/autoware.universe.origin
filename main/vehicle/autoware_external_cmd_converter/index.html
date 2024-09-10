@@ -1252,8 +1252,6 @@
         
           
         
-          
-        
       
       
         <label class="md-nav__link" for="__nav_1_4" id="__nav_1_4_label" tabindex="0">
@@ -1402,20 +1400,6 @@
     <li class="md-nav__item">
       <a href="../../common/tier4_localization_rviz_plugin" class="md-nav__link">
         tier4_localization_rviz_plugin
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../common/tier4_perception_rviz_plugin" class="md-nav__link">
-        tier4_perception_rviz_plugin
       </a>
     </li>
   
@@ -5113,6 +5097,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
@@ -7431,6 +7417,54 @@
         <label class="md-nav__title" for="__nav_7_39">
           <span class="md-nav__icon md-icon"></span>
           Autoware traffic light visualization
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_40" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../perception/perception_utils/">Perception utils</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_40_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_40">
+          <span class="md-nav__icon md-icon"></span>
+          Perception utils
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -10360,6 +10394,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
@@ -10642,12 +10678,60 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../simulator/vehicle_door_simulator/">Vehicle door simulator</a>
+          <a href="../../simulator/tier4_dummy_object_rviz_plugin/">Tier4 dummy object rviz plugin</a>
           
         </div>
       
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_6_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_10_6">
+          <span class="md-nav__icon md-icon"></span>
+          Tier4 dummy object rviz plugin
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_7" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../simulator/vehicle_door_simulator/">Vehicle door simulator</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_10_7">
           <span class="md-nav__icon md-icon"></span>
           Vehicle door simulator
         </label>
@@ -13152,6 +13236,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#algorithm" class="md-nav__link">
+    Algorithm
+  </a>
+  
+    <nav class="md-nav" aria-label="Algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-calculate-reference-acceleration-and-velocity" class="md-nav__link">
+    How to calculate reference acceleration and velocity
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#input-topics" class="md-nav__link">
     Input topics
   </a>
@@ -13199,6 +13303,71 @@
 
 <div><h1 id="external_cmd_converter">external_cmd_converter<a class="headerlink" href="#external_cmd_converter" title="Permanent link">#</a></h1>
 <p><code>external_cmd_converter</code> is a node that converts desired mechanical input to acceleration and velocity by using accel/brake map.</p>
+<h2 id="algorithm">Algorithm<a class="headerlink" href="#algorithm" title="Permanent link">#</a></h2>
+<h3 id="how-to-calculate-reference-acceleration-and-velocity">How to calculate reference acceleration and velocity<a class="headerlink" href="#how-to-calculate-reference-acceleration-and-velocity" title="Permanent link">#</a></h3>
+<p>A reference acceleration and velocity are derived from the throttle and brake values of external control commands.</p>
+<h4 id="reference-acceleration">Reference Acceleration<a class="headerlink" href="#reference-acceleration" title="Permanent link">#</a></h4>
+<p>A reference acceleration is calculated from accel_brake_map based on values of a desired_pedal and a current velocity;</p>
+<div class="arithmatex">\[
+    pedal_d = throttle_d - brake_d,
+\]</div>
+<div class="arithmatex">\[
+    acc_{ref} = Acc(pedal_d, v_{x,current}).
+\]</div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(throttle_d\)</span></td>
+<td>throttle value of external control command (<code>~/in/external_control_cmd.control.throttle</code>)</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(brake_d\)</span></td>
+<td>brake value of external control command (<code>~/in/external_control_cmd.control.brake</code>)</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(v_{x,current}\)</span></td>
+<td>current longitudinal velocity (<code>~/in/odometry.twist.twist.linear.x</code>)</td>
+</tr>
+<tr>
+<td>Acc</td>
+<td>accel_brake_map</td>
+</tr>
+</tbody>
+</table>
+<h4 id="reference-velocity">Reference Velocity<a class="headerlink" href="#reference-velocity" title="Permanent link">#</a></h4>
+<p>A reference velocity is calculated based on a current velocity and a reference acceleration:</p>
+<div class="arithmatex">\[
+v_{ref} =
+    v_{x,current} + k_{v_{ref}} \cdot \text{sign}_{gear} \cdot acc_{ref}.
+\]</div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(acc_{ref}\)</span></td>
+<td>reference acceleration</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(k_{v_{ref}}\)</span></td>
+<td>reference velocity gain</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\text{sign}_{gear}\)</span></td>
+<td>gear command (<code>~/in/shift_cmd</code>) (Drive/Low: 1, Reverse: -1, Other: 0)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="input-topics">Input topics<a class="headerlink" href="#input-topics" title="Permanent link">#</a></h2>
 <table>
 <thead>
@@ -13263,6 +13432,11 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>ref_vel_gain_</code></td>
+<td>double</td>
+<td>reference velocity gain</td>
+</tr>
 <tr>
 <td><code>timer_rate</code></td>
 <td>double</td>
