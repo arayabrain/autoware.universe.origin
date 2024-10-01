@@ -15,6 +15,7 @@
 #ifndef SHAPE_ESTIMATION__FILTER__FILTER_INTERFACE_HPP_
 #define SHAPE_ESTIMATION__FILTER__FILTER_INTERFACE_HPP_
 
+#include "shape_estimation/shape_estimator.hpp"
 #include <autoware_auto_perception_msgs/msg/shape.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 
@@ -29,7 +30,8 @@ public:
 
   virtual bool filter(
     const autoware_auto_perception_msgs::msg::Shape & shape,
-    const geometry_msgs::msg::Pose & pose) = 0;
+    const geometry_msgs::msg::Pose & pose,
+    const ShapeParameters & param ) = 0;
 };
 
 #endif  // SHAPE_ESTIMATION__FILTER__FILTER_INTERFACE_HPP_

@@ -12,12 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "shape_estimation/filter/no_filter.hpp"
+#include "shape_estimation/filter/vehicle_filter.hpp"
+#include <iostream>
 
-bool NoFilter::filter(
-  [[maybe_unused]] const autoware_auto_perception_msgs::msg::Shape & shape,
+bool VehicleFilter::filter(
+  const autoware_auto_perception_msgs::msg::Shape & shape,
   [[maybe_unused]] const geometry_msgs::msg::Pose & pose,
   [[maybe_unused]] const ShapeParameters & shape_param)
 {
-  return true;
+  std::cout << "VehicleFilter::filter with " << shape_param.name << std::endl;
+  float min_width = shape_param.shape_limitations.min_width;
+  float max_width = shape_param.shape_limitations.max_width;
+  float max_length = shape_param.shape_limitations.max_length;
+  float min_height = shape_param.shape_limitations.min_height;
+  float max_height = shape_param.shape_limitations.max_height;
+  return utils::filterVehicleBoundingBox(shape, min_width, max_width, max_length, min_height, max_height);
 }

@@ -26,7 +26,9 @@ public:
 
   bool filter(
     const autoware_auto_perception_msgs::msg::Shape & shape,
-    const geometry_msgs::msg::Pose & pose) override;
+    const geometry_msgs::msg::Pose & pose,
+    const ShapeParameters & shape_param
+    ) override;
 };
 
 #endif  // SHAPE_ESTIMATION__FILTER__NO_FILTER_HPP_

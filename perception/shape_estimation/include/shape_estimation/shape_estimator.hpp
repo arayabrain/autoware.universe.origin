@@ -27,6 +27,23 @@
 
 #include <string>
 
+struct ShapeLimitations
+  {
+    float min_width;
+    float max_width;
+    float min_length;
+    float max_length;
+    float min_height;
+    float max_height;
+};
+
+struct ShapeParameters
+{
+  std::string name;
+  ShapeLimitations shape_limitations;
+  std::string get_name() const { return name; }
+};
+
 struct ReferenceYawInfo
 {
   float yaw;
@@ -55,18 +72,24 @@ private:
     geometry_msgs::msg::Pose & pose_output);
   bool applyFilter(
     const uint8_t label, const autoware_auto_perception_msgs::msg::Shape & shape,
-    const geometry_msgs::msg::Pose & pose);
+    const geometry_msgs::msg::Pose & pose, const ShapeParameters & shape_limitation);
   bool applyCorrector(
     const uint8_t label, const bool use_reference_yaw,
     const boost::optional<ReferenceShapeSizeInfo> & ref_shape_size_info,
     autoware_auto_perception_msgs::msg::Shape & shape, geometry_msgs::msg::Pose & pose);
+  // add labelToString function
+  ShapeParameters getShapeLimitation(const std::string & name);
+  std::string labelToString(const uint8_t label);
+
 
   bool use_corrector_;
   bool use_filter_;
   bool use_boost_bbox_optimizer_;
+  // add shapes_ constructor
+  std::vector<ShapeParameters> shapes_;
 
 public:
-  ShapeEstimator(bool use_corrector, bool use_filter, bool use_boost_bbox_optimizer = false);
+  ShapeEstimator(std::vector<ShapeParameters> & shapes, bool use_corrector, bool use_filter, bool use_boost_bbox_optimizer = false);
 
   virtual ~ShapeEstimator() = default;
 

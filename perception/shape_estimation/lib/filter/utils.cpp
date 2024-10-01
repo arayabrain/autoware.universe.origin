@@ -13,16 +13,18 @@
 // limitations under the License.
 
 #include "shape_estimation/filter/utils.hpp"
+#include <iostream>
 
 namespace utils
 {
 bool filterVehicleBoundingBox(
   const autoware_auto_perception_msgs::msg::Shape & shape, const float min_width,
-  const float max_width, const float max_length)
+  const float max_width, const float max_length, const float min_height, const float max_height)
 {
   const float x = shape.dimensions.x;
   const float y = shape.dimensions.y;
   const float s = x * y;
+  const float z = shape.dimensions.z;
 
   if (shape.type != autoware_auto_perception_msgs::msg::Shape::BOUNDING_BOX) {
     return true;
@@ -39,6 +41,12 @@ bool filterVehicleBoundingBox(
   }
 
   if (max_length * max_width < s) {
+    return false;
+  }
+
+  if (max_height < z || z < min_height) {
+    std::cout <<"Filtered (min_height:" << min_height << ", max_height:" << max_height << ")" <<std::endl;
+    std::cout <<"Removed (x:" << x << ", y:" << y << ", z: " << z << ")" <<std::endl;
     return false;
   }
   return true;

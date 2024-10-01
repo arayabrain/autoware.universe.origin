@@ -6,3 +6,38 @@
       use_vehicle_reference_shape_size: false
       use_boost_bbox_optimizer: false
       fix_filtered_objects_label_to_unknown: true
+      # car config
+      shapes.car.shape.min_width: 1.5
+      shapes.car.shape.max_width: 2.5
+      shapes.car.shape.min_length: 3.0
+      shapes.car.shape.max_length: 5.8
+      shapes.car.shape.min_height: 0.3
+      shapes.car.shape.max_height: 12.0
+      # truck config
+      shapes.truck.shape.min_width: 1.5
+      shapes.truck.shape.max_width: 3.5
+      shapes.truck.shape.min_length: 4.0
+      shapes.truck.shape.max_length: 18.0
+      shapes.truck.shape.min_height: 0.3
+      shapes.truck.shape.max_height: 18.0
+      # bus config
+      shapes.bus.shape.min_width: 2.0
+      shapes.bus.shape.max_width: 3.2
+      shapes.bus.shape.min_length: 5.0
+      shapes.bus.shape.max_length: 17.0
+      shapes.bus.shape.min_height: 0.3
+      shapes.bus.shape.max_height: 17.0
+      # trailer config
+      shapes.trailer.shape.min_width: 1.5
+      shapes.trailer.shape.max_width: 3.2
+      shapes.trailer.shape.min_length: 5.0
+      shapes.trailer.shape.max_length: 25.0
+      shapes.trailer.shape.min_height: 0.3
+      shapes.trailer.shape.max_height: 25.0
+      # bicycle and motorcycle config
+      shapes.bicycle.shape.min_width: 0.3
+      shapes.bicycle.shape.max_width: 1.2
+      shapes.bicycle.shape.min_length: 1.0
+      shapes.bicycle.shape.max_length: 2.8
+      shapes.bicycle.shape.min_height: 0.1
+      shapes.bicycle.shape.max_height: 3.0

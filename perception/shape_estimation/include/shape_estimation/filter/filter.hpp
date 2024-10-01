@@ -15,11 +15,8 @@
 #ifndef SHAPE_ESTIMATION__FILTER__FILTER_HPP_
 #define SHAPE_ESTIMATION__FILTER__FILTER_HPP_
 
-#include "shape_estimation/filter/bus_filter.hpp"
-#include "shape_estimation/filter/car_filter.hpp"
-#include "shape_estimation/filter/filter_interface.hpp"
+
 #include "shape_estimation/filter/no_filter.hpp"
-#include "shape_estimation/filter/trailer_filter.hpp"
-#include "shape_estimation/filter/truck_filter.hpp"
+#include "shape_estimation/filter/vehicle_filter.hpp"
 
 #endif  // SHAPE_ESTIMATION__FILTER__FILTER_HPP_

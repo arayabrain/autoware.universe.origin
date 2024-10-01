@@ -21,7 +21,7 @@ namespace utils
 {
 bool filterVehicleBoundingBox(
   const autoware_auto_perception_msgs::msg::Shape & shape, const float min_width,
-  const float max_width, const float max_length);
+  const float max_width, const float max_length, const float min_height, const float max_height);
 }  // namespace utils
 
 #endif  // SHAPE_ESTIMATION__FILTER__UTILS_HPP_

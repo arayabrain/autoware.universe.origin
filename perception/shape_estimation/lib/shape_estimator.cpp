@@ -23,10 +23,11 @@
 
 using Label = autoware_auto_perception_msgs::msg::ObjectClassification;
 
-ShapeEstimator::ShapeEstimator(bool use_corrector, bool use_filter, bool use_boost_bbox_optimizer)
+ShapeEstimator::ShapeEstimator(std::vector<ShapeParameters> & shapes, bool use_corrector, bool use_filter,  bool use_boost_bbox_optimizer)
 : use_corrector_(use_corrector),
   use_filter_(use_filter),
-  use_boost_bbox_optimizer_(use_boost_bbox_optimizer)
+  use_boost_bbox_optimizer_(use_boost_bbox_optimizer),
+  shapes_(shapes)
 {
 }
 
@@ -38,6 +39,11 @@ bool ShapeEstimator::estimateShapeAndPose(
 {
   autoware_auto_perception_msgs::msg::Shape shape;
   geometry_msgs::msg::Pose pose;
+
+  //get str name of label
+  std::string label_str = labelToString(label);
+  ShapeParameters shape_limitation = getShapeLimitation(label_str);
+
   // estimate shape
   bool reverse_to_unknown = false;
   if (!estimateOriginalShapeAndPose(label, cluster, ref_yaw_info, shape, pose)) {
@@ -46,7 +52,7 @@ bool ShapeEstimator::estimateShapeAndPose(
 
   // rule based filter
   if (use_filter_) {
-    if (!applyFilter(label, shape, pose)) {
+    if (!applyFilter(label, shape, pose, shape_limitation)) {
       reverse_to_unknown = true;
     }
   }
@@ -91,22 +97,15 @@ bool ShapeEstimator::estimateOriginalShapeAndPose(
 
 bool ShapeEstimator::applyFilter(
   const uint8_t label, const autoware_auto_perception_msgs::msg::Shape & shape,
-  const geometry_msgs::msg::Pose & pose)
+  const geometry_msgs::msg::Pose & pose, const ShapeParameters & shape_limitation)
 {
   std::unique_ptr<ShapeEstimationFilterInterface> filter_ptr;
-  if (label == Label::CAR) {
-    filter_ptr.reset(new CarFilter);
-  } else if (label == Label::BUS) {
-    filter_ptr.reset(new BusFilter);
-  } else if (label == Label::TRUCK) {
-    filter_ptr.reset(new TruckFilter);
-  } else if (label == Label::TRAILER) {
-    filter_ptr.reset(new TrailerFilter);
+  if (label == Label::CAR || label == Label::BUS || label == Label::TRUCK || label == Label::TRAILER) {
+    filter_ptr.reset(new VehicleFilter);
   } else {
     filter_ptr.reset(new NoFilter);
   }
-
-  return filter_ptr->filter(shape, pose);
+  return filter_ptr->filter(shape, pose, shape_limitation);
 }
 
 bool ShapeEstimator::applyCorrector(
@@ -133,4 +132,54 @@ bool ShapeEstimator::applyCorrector(
   }
 
   return corrector_ptr->correct(shape, pose);
+}
+
+// get shape_limitation by name
+ShapeParameters ShapeEstimator::getShapeLimitation(const std::string & name)
+{
+  for (const auto & param : shapes_) {
+    if (param.name == name) {
+      // debug print
+      std::cout << "Shape Limitation in Query: " << param.name << std::endl;
+      // std::cout << "min_width: " << param.shape_limitations.min_width << std::endl;
+      // std::cout << "max_width: " << param.shape_limitations.max_width << std::endl;
+      // std::cout << "min_length: " << param.shape_limitations.min_length << std::endl;
+      // std::cout << "max_length: " << param.shape_limitations.max_length << std::endl;
+      // std::cout << "min_height: " << param.shape_limitations.min_height << std::endl;
+      // std::cout << "max_height: " << param.shape_limitations.max_height << std::endl;
+      return param;
+    }
+  }
+  ShapeParameters shape_limitation;
+  shape_limitation.name = "unknown";
+  shape_limitation.shape_limitations.min_width = 0.0;
+  shape_limitation.shape_limitations.max_width = 99.0;
+  shape_limitation.shape_limitations.min_length = 0.0;
+  shape_limitation.shape_limitations.max_length = 99.0;
+  shape_limitation.shape_limitations.min_height = 0.0;
+  shape_limitation.shape_limitations.max_height = 99.0;
+  return shape_limitation;
+}
+
+
+// convert label(uint8_t) to string
+std::string ShapeEstimator::labelToString(const uint8_t label)
+{
+  if (label == Label::CAR) {
+    return "car";
+  } else if (label == Label::TRUCK) {
+    return "truck";
+  } else if (label == Label::BUS) {
+    return "bus";
+  } else if (label == Label::TRAILER) {
+    return "trailer";
+  } else if (label == Label::BICYCLE) {
+    return "bicycle";
+  } else if (label == Label::MOTORCYCLE) {
+    return "bicycle";
+  } else if (label == Label::PEDESTRIAN) {
+    return "pedestrian";
+  } else {
+    return "unknown";
+  }
 }

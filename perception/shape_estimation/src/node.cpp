@@ -31,6 +31,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 using Label = autoware_auto_perception_msgs::msg::ObjectClassification;
 
@@ -50,8 +51,25 @@ ShapeEstimationNode::ShapeEstimationNode(const rclcpp::NodeOptions & node_option
   fix_filtered_objects_label_to_unknown_ =
     declare_parameter<bool>("fix_filtered_objects_label_to_unknown");
   RCLCPP_INFO(this->get_logger(), "using boost shape estimation : %d", use_boost_bbox_optimizer);
-  estimator_ =
-    std::make_unique<ShapeEstimator>(use_corrector, use_filter, use_boost_bbox_optimizer);
+
+  // get shape params
+  // set shapes as blank std::vector<ShapeParameters> constructor
+  std::vector<ShapeParameters> shapes;
+  {
+    std::vector<std::string> shape_names = {"bus", "car", "truck", "trailer", "bicycle"};
+    for (const auto & name : shape_names) {
+      ShapeParameters shape_param;
+      shape_param.name = name;
+      shape_param.shape_limitations.min_width = this->declare_parameter<float>("shapes." + name + ".shape.min_width");
+      shape_param.shape_limitations.max_width = this->declare_parameter<float>("shapes." + name + ".shape.max_width");
+      shape_param.shape_limitations.min_length = this->declare_parameter<float>("shapes." + name + ".shape.min_length");
+      shape_param.shape_limitations.max_length = this->declare_parameter<float>("shapes." + name + ".shape.max_length");
+      shape_param.shape_limitations.min_height = this->declare_parameter<float>("shapes." + name + ".shape.min_height");
+      shape_param.shape_limitations.max_height = this->declare_parameter<float>("shapes." + name + ".shape.max_height");
+      shapes.push_back(shape_param);
+    }
+  }
+  estimator_ = std::make_unique<ShapeEstimator>(shapes, use_corrector, use_filter, use_boost_bbox_optimizer);
 
   processing_time_publisher_ =
     std::make_unique<tier4_autoware_utils::DebugPublisher>(this, "shape_estimation");

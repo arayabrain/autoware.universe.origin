@@ -12,14 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "shape_estimation/filter/bus_filter.hpp"
+#ifndef SHAPE_ESTIMATION__FILTER__VEHICLE_FILTER_HPP_
+#define SHAPE_ESTIMATION__FILTER__VEHICLE_FILTER_HPP_
 
-bool BusFilter::filter(
-  const autoware_auto_perception_msgs::msg::Shape & shape,
-  [[maybe_unused]] const geometry_msgs::msg::Pose & pose)
+#include "shape_estimation/filter/filter_interface.hpp"
+#include "utils.hpp"
+
+class VehicleFilter : public ShapeEstimationFilterInterface
 {
-  constexpr float min_width = 2.0;
-  constexpr float max_width = 3.2;
-  constexpr float max_length = 17.0;
-  return utils::filterVehicleBoundingBox(shape, min_width, max_width, max_length);
-}
+public:
+  VehicleFilter() = default;
+
+  ~VehicleFilter() = default;
+
+  bool filter(
+    const autoware_auto_perception_msgs::msg::Shape & shape,
+    const geometry_msgs::msg::Pose & pose,
+    const ShapeParameters & shape_param ) override;
+};
+
+#endif  // SHAPE_ESTIMATION__FILTER__TRAILER_FILTER_HPP_
