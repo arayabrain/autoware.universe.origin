@@ -1096,6 +1096,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware_universe/main/sensing/autoware_calibration_status_classifier/</loc>
+         <lastmod>2025-09-30</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware_universe/main/sensing/autoware_cuda_pointcloud_preprocessor/</loc>
          <lastmod>2025-09-30</lastmod>
          <changefreq>daily</changefreq>
