@@ -10,3 +10,5 @@
     iou_threshold: 0.65
     unknown_iou_threshold: 0.1
     remove_unknown: true
+    enable_roi_cluster_splitting: false
+    split_min_point_num: 5

@@ -22,6 +22,8 @@
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 
 #include <algorithm>
+#include <cstring>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -53,6 +55,8 @@ RoiClusterFusionNode::RoiClusterFusionNode(const rclcpp::NodeOptions & options)
   remove_unknown_ = declare_parameter<bool>("remove_unknown");
   fusion_distance_ = declare_parameter<double>("fusion_distance");
   strict_iou_fusion_distance_ = declare_parameter<double>("strict_iou_fusion_distance");
+  enable_roi_cluster_splitting_ = declare_parameter<bool>("enable_roi_cluster_splitting");
+  split_min_point_num_ = declare_parameter<int>("split_min_point_num");
 
   // publisher
   pub_ptr_ = this->create_publisher<ClusterMsgType>("output", rclcpp::QoS{1});
@@ -99,12 +103,16 @@ void RoiClusterFusionNode::fuse_on_single_image(
   }
 
   std::map<std::size_t, RegionOfInterest> m_cluster_roi;
+  // Map: cluster index -> vector of (raw_point_index, projected_2d_point)
+  std::map<std::size_t, std::vector<std::pair<std::size_t, Eigen::Vector2d>>>
+    m_cluster_projected_points;
 
   std::vector<sensor_msgs::msg::RegionOfInterest> debug_image_rois;
   std::vector<Eigen::Vector2d> debug_obstacle_points;
   std::vector<sensor_msgs::msg::RegionOfInterest> debug_obstacle_rois;
   std::vector<double> debug_max_iou_for_image_rois;
 
+  // --- Pass 1: Project cluster points to 2D and compute bounding ROIs ---
   for (std::size_t i = 0; i < input_cluster_msg.feature_objects.size(); ++i) {
     if (input_cluster_msg.feature_objects.at(i).feature.cluster.data.empty()) {
       continue;
@@ -126,10 +134,13 @@ void RoiClusterFusionNode::fuse_on_single_image(
 
     int min_x(camera_info.width), min_y(camera_info.height), max_x(0), max_y(0);
     std::vector<Eigen::Vector2d> projected_points;
+    std::vector<std::pair<std::size_t, Eigen::Vector2d>> indexed_projected_points;
     projected_points.reserve(transformed_cluster.data.size());
+
+    std::size_t raw_pt_idx = 0;
     for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(transformed_cluster, "x"),
          iter_y(transformed_cluster, "y"), iter_z(transformed_cluster, "z");
-         iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z) {
+         iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z, ++raw_pt_idx) {
       if (*iter_z <= 0.0) {
         continue;
       }
@@ -146,6 +157,7 @@ void RoiClusterFusionNode::fuse_on_single_image(
         max_y = std::max(py, max_y);
 
         projected_points.push_back(projected_point);
+        indexed_projected_points.emplace_back(raw_pt_idx, projected_point);
         if (debugger_) debug_obstacle_points.push_back(projected_point);
       }
     }
@@ -159,8 +171,13 @@ void RoiClusterFusionNode::fuse_on_single_image(
     roi.width = max_x - min_x;
     roi.height = max_y - min_y;
     m_cluster_roi.insert(std::make_pair(i, roi));
+    m_cluster_projected_points[i] = std::move(indexed_projected_points);
     if (debugger_) debug_obstacle_rois.push_back(roi);
   }
+
+  // --- Pass 2: Match ROIs to clusters, accumulate matches ---
+  // Map: cluster index -> vector of RoiMatch
+  std::map<std::size_t, std::vector<RoiMatch>> cluster_roi_matches;
 
   for (const auto & feature_obj : input_rois_msg.feature_objects) {
     int index = -1;
@@ -195,23 +212,88 @@ void RoiClusterFusionNode::fuse_on_single_image(
       continue;
     }
 
-    if (!output_cluster_msg.feature_objects.empty()) {
-      auto & fused_object = output_cluster_msg.feature_objects.at(index).object;
-      const bool is_roi_existence_prob_higher =
-        fused_object.existence_probability <= feature_obj.object.existence_probability;
-      const bool is_roi_iou_over_threshold =
-        (is_roi_label_known && iou_threshold_ < max_iou) ||
-        (!is_roi_label_known && unknown_iou_threshold_ < max_iou);
+    const bool is_roi_iou_over_threshold =
+      (is_roi_label_known && iou_threshold_ < max_iou) ||
+      (!is_roi_label_known && unknown_iou_threshold_ < max_iou);
 
-      if (is_roi_iou_over_threshold && is_roi_existence_prob_higher) {
-        fused_object.classification = feature_obj.object.classification;
-        // Update existence_probability for fused objects
-        fused_object.existence_probability =
-          std::clamp(feature_obj.object.existence_probability, min_roi_existence_prob_, 1.0f);
-      }
+    if (is_roi_iou_over_threshold) {
+      RoiMatch match;
+      match.roi = feature_obj.feature.roi;
+      match.classification = feature_obj.object.classification;
+      match.existence_prob = feature_obj.object.existence_probability;
+      match.iou = max_iou;
+      cluster_roi_matches[index].push_back(match);
     }
+
     if (debugger_) debug_image_rois.push_back(feature_obj.feature.roi);
     if (debugger_) debug_max_iou_for_image_rois.push_back(max_iou);
+  }
+
+  // --- Pass 3: Apply matches — single label or split ---
+  // Collect indices that need to be replaced by split results
+  std::vector<std::size_t> indices_to_remove;
+  std::vector<ClusterObjType> new_objects_to_add;
+
+  for (auto & [cluster_idx, matches] : cluster_roi_matches) {
+    if (output_cluster_msg.feature_objects.empty()) {
+      break;
+    }
+
+    if (matches.size() == 1) {
+      // Single match: apply label directly (original behavior)
+      auto & fused_object = output_cluster_msg.feature_objects.at(cluster_idx).object;
+      const auto & match = matches[0];
+      if (fused_object.existence_probability <= match.existence_prob) {
+        fused_object.classification = match.classification;
+        fused_object.existence_probability =
+          std::clamp(match.existence_prob, min_roi_existence_prob_, 1.0f);
+      }
+    } else if (matches.size() >= 2 && enable_roi_cluster_splitting_) {
+      // Multiple matches with splitting enabled
+      auto split_results = splitClusterByRois(
+        output_cluster_msg.feature_objects.at(cluster_idx),
+        m_cluster_projected_points[cluster_idx], matches);
+
+      if (split_results.size() >= 2) {
+        indices_to_remove.push_back(cluster_idx);
+        for (auto & [sub_obj, roi_match] : split_results) {
+          sub_obj.object.classification = roi_match.classification;
+          sub_obj.object.existence_probability =
+            std::clamp(roi_match.existence_prob, min_roi_existence_prob_, 1.0f);
+          new_objects_to_add.push_back(std::move(sub_obj));
+        }
+      } else {
+        // Fallback: splitting produced <2 clusters, apply best match
+        auto & fused_object = output_cluster_msg.feature_objects.at(cluster_idx).object;
+        const auto & best =
+          *std::max_element(matches.begin(), matches.end(), [](const auto & a, const auto & b) {
+            return a.existence_prob < b.existence_prob;
+          });
+        fused_object.classification = best.classification;
+        fused_object.existence_probability =
+          std::clamp(best.existence_prob, min_roi_existence_prob_, 1.0f);
+      }
+    } else {
+      // Multiple matches but splitting disabled: apply best match
+      auto & fused_object = output_cluster_msg.feature_objects.at(cluster_idx).object;
+      const auto & best =
+        *std::max_element(matches.begin(), matches.end(), [](const auto & a, const auto & b) {
+          return a.existence_prob < b.existence_prob;
+        });
+      fused_object.classification = best.classification;
+      fused_object.existence_probability =
+        std::clamp(best.existence_prob, min_roi_existence_prob_, 1.0f);
+    }
+  }
+
+  // Remove original clusters that were split (in reverse order to preserve indices)
+  std::sort(indices_to_remove.rbegin(), indices_to_remove.rend());
+  for (auto idx : indices_to_remove) {
+    output_cluster_msg.feature_objects.erase(output_cluster_msg.feature_objects.begin() + idx);
+  }
+  // Add new split sub-clusters
+  for (auto & obj : new_objects_to_add) {
+    output_cluster_msg.feature_objects.push_back(std::move(obj));
   }
 
   // note: debug objects are safely cleared in fusion_node.cpp
@@ -223,6 +305,150 @@ void RoiClusterFusionNode::fuse_on_single_image(
     debugger_->max_iou_for_image_rois_ = debug_max_iou_for_image_rois;
     debugger_->publishImage(det2d_status.id, input_rois_msg.header.stamp);
   }
+}
+
+std::vector<std::pair<ClusterObjType, RoiClusterFusionNode::RoiMatch>>
+RoiClusterFusionNode::splitClusterByRois(
+  const ClusterObjType & cluster_obj,
+  const std::vector<std::pair<std::size_t, Eigen::Vector2d>> & projected_points,
+  const std::vector<RoiMatch> & roi_matches)
+{
+  const auto & original_cloud = cluster_obj.feature.cluster;
+  const std::size_t point_step = original_cloud.point_step;
+  const std::size_t n_points = original_cloud.width * original_cloud.height;
+  const std::size_t n_rois = roi_matches.size();
+
+  // Assign each point to an ROI index
+  // Default: assign to ROI 0 (for non-projected points)
+  std::vector<std::size_t> point_roi_assignment(n_points, 0);
+
+  // Build a lookup from raw_pt_idx -> projected 2D point
+  std::map<std::size_t, Eigen::Vector2d> projected_map;
+  for (const auto & [raw_idx, pt2d] : projected_points) {
+    projected_map[raw_idx] = pt2d;
+  }
+
+  // Precompute ROI centers for nearest-ROI fallback
+  std::vector<Eigen::Vector2d> roi_centers(n_rois);
+  for (std::size_t r = 0; r < n_rois; ++r) {
+    const auto & roi = roi_matches[r].roi;
+    roi_centers[r] = Eigen::Vector2d(
+      roi.x_offset + roi.width * 0.5, roi.y_offset + roi.height * 0.5);
+  }
+
+  for (std::size_t pt_idx = 0; pt_idx < n_points; ++pt_idx) {
+    auto it = projected_map.find(pt_idx);
+    if (it == projected_map.end()) {
+      // Not projected (z<=0): assign to ROI 0
+      point_roi_assignment[pt_idx] = 0;
+      continue;
+    }
+
+    const Eigen::Vector2d & pt2d = it->second;
+
+    // Check which ROI contains this point
+    int best_roi = -1;
+    for (std::size_t r = 0; r < n_rois; ++r) {
+      if (isPointInsideRoi(roi_matches[r].roi, pt2d.x(), pt2d.y(), 1.0)) {
+        best_roi = static_cast<int>(r);
+        break;
+      }
+    }
+
+    if (best_roi < 0) {
+      // Point not inside any ROI: assign to nearest ROI center
+      double min_dist = std::numeric_limits<double>::max();
+      for (std::size_t r = 0; r < n_rois; ++r) {
+        double dist = (pt2d - roi_centers[r]).squaredNorm();
+        if (dist < min_dist) {
+          min_dist = dist;
+          best_roi = static_cast<int>(r);
+        }
+      }
+    }
+
+    point_roi_assignment[pt_idx] = static_cast<std::size_t>(best_roi);
+  }
+
+  // Group points by ROI assignment
+  std::vector<std::vector<std::size_t>> roi_point_indices(n_rois);
+  for (std::size_t pt_idx = 0; pt_idx < n_points; ++pt_idx) {
+    roi_point_indices[point_roi_assignment[pt_idx]].push_back(pt_idx);
+  }
+
+  // Merge small sub-clusters into the largest one
+  std::size_t largest_roi = 0;
+  std::size_t largest_count = 0;
+  for (std::size_t r = 0; r < n_rois; ++r) {
+    if (roi_point_indices[r].size() > largest_count) {
+      largest_count = roi_point_indices[r].size();
+      largest_roi = r;
+    }
+  }
+  for (std::size_t r = 0; r < n_rois; ++r) {
+    if (r == largest_roi) continue;
+    if (static_cast<int>(roi_point_indices[r].size()) < split_min_point_num_) {
+      roi_point_indices[largest_roi].insert(
+        roi_point_indices[largest_roi].end(), roi_point_indices[r].begin(),
+        roi_point_indices[r].end());
+      roi_point_indices[r].clear();
+    }
+  }
+
+  // Count non-empty sub-clusters
+  std::size_t non_empty_count = 0;
+  for (std::size_t r = 0; r < n_rois; ++r) {
+    if (!roi_point_indices[r].empty()) ++non_empty_count;
+  }
+  if (non_empty_count < 2) {
+    return {};  // splitting not meaningful
+  }
+
+  // Build sub-cluster objects
+  std::vector<std::pair<ClusterObjType, RoiMatch>> results;
+  for (std::size_t r = 0; r < n_rois; ++r) {
+    if (roi_point_indices[r].empty()) continue;
+
+    ClusterObjType sub_obj;
+    // Build sub-cluster PointCloud2
+    auto & sub_cloud = sub_obj.feature.cluster;
+    sub_cloud.header = original_cloud.header;
+    sub_cloud.fields = original_cloud.fields;
+    sub_cloud.point_step = point_step;
+    sub_cloud.is_bigendian = original_cloud.is_bigendian;
+    sub_cloud.is_dense = original_cloud.is_dense;
+    sub_cloud.height = 1;
+    sub_cloud.width = roi_point_indices[r].size();
+    sub_cloud.row_step = sub_cloud.width * point_step;
+    sub_cloud.data.resize(sub_cloud.width * point_step);
+
+    double cx = 0.0, cy = 0.0, cz = 0.0;
+    for (std::size_t k = 0; k < roi_point_indices[r].size(); ++k) {
+      std::size_t src_offset = roi_point_indices[r][k] * point_step;
+      std::size_t dst_offset = k * point_step;
+      std::memcpy(&sub_cloud.data[dst_offset], &original_cloud.data[src_offset], point_step);
+
+      // Read x,y,z for centroid (assume float at offset 0,4,8)
+      float x, y, z;
+      std::memcpy(&x, &original_cloud.data[src_offset + 0], sizeof(float));
+      std::memcpy(&y, &original_cloud.data[src_offset + 4], sizeof(float));
+      std::memcpy(&z, &original_cloud.data[src_offset + 8], sizeof(float));
+      cx += x;
+      cy += y;
+      cz += z;
+    }
+
+    // Compute centroid and set pose
+    double n = static_cast<double>(roi_point_indices[r].size());
+    sub_obj.object.kinematics.pose_with_covariance.pose.position.x = cx / n;
+    sub_obj.object.kinematics.pose_with_covariance.pose.position.y = cy / n;
+    sub_obj.object.kinematics.pose_with_covariance.pose.position.z = cz / n;
+    sub_obj.object.kinematics.pose_with_covariance.pose.orientation.w = 1.0;
+
+    results.emplace_back(std::move(sub_obj), roi_matches[r]);
+  }
+
+  return results;
 }
 
 bool RoiClusterFusionNode::out_of_scope(const DetectedObjectWithFeature & obj)

@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 namespace autoware::image_projection_based_fusion
 {
 const std::map<std::string, uint8_t> IOU_MODE_MAP{{"iou", 0}, {"iou_x", 1}, {"iou_y", 2}};
@@ -50,12 +51,27 @@ private:
   double fusion_distance_;
   double strict_iou_fusion_distance_;
   std::string rough_iou_match_mode_{"iou_x"};
+  bool enable_roi_cluster_splitting_{false};
+  int split_min_point_num_{5};
+
+  struct RoiMatch
+  {
+    sensor_msgs::msg::RegionOfInterest roi;
+    std::vector<autoware_perception_msgs::msg::ObjectClassification> classification;
+    float existence_prob;
+    double iou;
+  };
 
   bool is_far_enough(const ClusterObjType & obj, const double distance_threshold);
   bool out_of_scope(const ClusterObjType & obj);
   double cal_iou_by_mode(
     const sensor_msgs::msg::RegionOfInterest & roi_1,
     const sensor_msgs::msg::RegionOfInterest & roi_2, const std::string iou_mode);
+
+  std::vector<std::pair<ClusterObjType, RoiMatch>> splitClusterByRois(
+    const ClusterObjType & cluster_obj,
+    const std::vector<std::pair<std::size_t, Eigen::Vector2d>> & projected_points,
+    const std::vector<RoiMatch> & roi_matches);
 };
 
 }  // namespace autoware::image_projection_based_fusion
